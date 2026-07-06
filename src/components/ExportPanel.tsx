@@ -47,6 +47,14 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
     const urlToEncode = shortURL || shareableURL;
     if (urlToEncode) {
       setQrCodeError(null);
+      
+      // Preemptively check if the URL exceeds standard QR Code binary capacity limits (~2950 chars)
+      if (urlToEncode.length > 2950) {
+        setQrCodeError("The card content (including custom drawings, high-resolution photo uploads, or voice recordings) contains too much data to fit inside a single physical QR code. To share this card, please use the direct link above or click 'Download Standalone HTML' below to save it as a self-contained file.");
+        setQrCodeUrl('');
+        return;
+      }
+
       QRCode.toDataURL(urlToEncode, {
         width: 300,
         margin: 2,
@@ -60,7 +68,7 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
           setQrCodeUrl(url);
         })
         .catch(err => {
-          console.error("Failed to generate QR Code:", err);
+          console.warn("Failed to generate QR Code:", err);
           setQrCodeError("The card content (including custom drawings, high-resolution photo uploads, or voice recordings) contains too much data to fit inside a single physical QR code. To share this card, please use the direct link above or click 'Download Standalone HTML' below to save it as a self-contained file.");
           setQrCodeUrl('');
         });
