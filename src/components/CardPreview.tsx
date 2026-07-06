@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GreetingCardData } from '../types';
 import { THEMES } from '../data';
 import { PLACEHOLDERS } from '../utils';
-import { CardMusicPlayer } from '../audioHelper';
+import { CardMusicPlayer, playPartyPopSound } from '../audioHelper';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Lock, Key, Heart, 
@@ -150,6 +150,24 @@ function AnimatedWish({ text, style = 'fade', className = '', fontFamily, delay 
   );
 }
 
+interface PopperParticle {
+  id: number;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  midX: number;
+  midY: number;
+  color: string;
+  size: number;
+  type: 'rectangle' | 'circle' | 'star' | 'emoji' | 'ribbon';
+  emoji?: string;
+  rotation: number;
+  spinDirection: number;
+  duration: number;
+  delay: number;
+}
+
 export default function CardPreview({ cardData, activePage, setActivePage, gatedMode = false }: CardPreviewProps) {
   // Gated local states for passcode/opening simulation
   const [envelopeOpen, setEnvelopeOpen] = useState(false);
@@ -158,6 +176,9 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
   const [isUnlocked, setIsUnlocked] = useState(!gatedMode); // unlocked by default in editor mode
   const [candlesBlown, setCandlesBlown] = useState(false);
   const [confettiBurst, setConfettiBurst] = useState<{ id: number; x: number; y: number; color: string; delay: number }[]>([]);
+  const [isPopping, setIsPopping] = useState(false);
+  const [popperParticles, setPopperParticles] = useState<PopperParticle[]>([]);
+  const [lastShotTime, setLastShotTime] = useState<number>(0);
   const [decorations, setDecorations] = useState<{ id: number; emoji: string; left: number; delay: number; duration: number; size: number; rotate: number }[]>([]);
 
   useEffect(() => {
@@ -339,6 +360,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
 
   // Confetti trigger
   const triggerConfetti = () => {
+    // 1. Traditional background falling confetti burst
     const colors = [accent, '#E7A79A', '#C9973F', '#2E7D6B', '#4A5FB3', '#F43F5E', '#10B981', '#F59E0B'];
     const burst = Array.from({ length: 60 }).map((_, i) => ({
       id: i + Math.random(),
@@ -348,10 +370,83 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
       delay: Math.random() * 0.4
     }));
     setConfettiBurst(burst);
-    // Clear after 3 seconds
+    // Clear traditional after 3 seconds
     setTimeout(() => {
       setConfettiBurst([]);
     }, 3000);
+
+    // 2. High-end multi-volley Party Bomber/Popper simulation
+    setIsPopping(true);
+    
+    const fireVolley = (volleyNum: number, delayMs: number) => {
+      setTimeout(() => {
+        playPartyPopSound();
+        setLastShotTime(Date.now());
+
+        const colorsList = [accent, '#F43F5E', '#10B981', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#06B6D4', '#EAB308'];
+        const shapes: ('rectangle' | 'circle' | 'star' | 'emoji' | 'ribbon')[] = ['rectangle', 'circle', 'star', 'emoji', 'ribbon'];
+        const emojis = ['🎉', '🎈', '💖', '✨', '🌟', '🧁', '🎁', '🎂', '🍭', '🌸'];
+
+        const newParticles: PopperParticle[] = [];
+
+        // Firing 25 particles from left launcher, 25 particles from right launcher
+        for (let i = 0; i < 25; i++) {
+          const lTargetX = 15 + Math.random() * 60;
+          const lTargetY = 30 + Math.random() * 50;
+          const leftParticle: PopperParticle = {
+            id: Math.random() + i + (volleyNum * 100),
+            startX: 2,
+            startY: 95,
+            targetX: lTargetX,
+            targetY: lTargetY,
+            midX: (2 + lTargetX) / 2 + (Math.random() * 20 - 10),
+            midY: Math.max(5, lTargetY - (25 + Math.random() * 30)), // high-altitude apex
+            color: colorsList[Math.floor(Math.random() * colorsList.length)],
+            size: 8 + Math.random() * 12,
+            type: shapes[Math.floor(Math.random() * shapes.length)],
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            rotation: Math.random() * 360,
+            spinDirection: Math.random() > 0.5 ? 1 : -1,
+            duration: 1.6 + Math.random() * 1.2,
+            delay: Math.random() * 0.12
+          };
+          newParticles.push(leftParticle);
+
+          const rTargetX = 25 + Math.random() * 60;
+          const rTargetY = 30 + Math.random() * 50;
+          const rightParticle: PopperParticle = {
+            id: Math.random() + i + 1000 + (volleyNum * 100),
+            startX: 98,
+            startY: 95,
+            targetX: rTargetX,
+            targetY: rTargetY,
+            midX: (98 + rTargetX) / 2 + (Math.random() * 20 - 10),
+            midY: Math.max(5, rTargetY - (25 + Math.random() * 30)), // high-altitude apex
+            color: colorsList[Math.floor(Math.random() * colorsList.length)],
+            size: 8 + Math.random() * 12,
+            type: shapes[Math.floor(Math.random() * shapes.length)],
+            emoji: emojis[Math.floor(Math.random() * emojis.length)],
+            rotation: Math.random() * 360,
+            spinDirection: Math.random() > 0.5 ? 1 : -1,
+            duration: 1.6 + Math.random() * 1.2,
+            delay: Math.random() * 0.12
+          };
+          newParticles.push(rightParticle);
+        }
+
+        setPopperParticles(prev => [...prev, ...newParticles]);
+      }, delayMs);
+    };
+
+    fireVolley(0, 0);
+    fireVolley(1, 250);
+    fireVolley(2, 550);
+    fireVolley(3, 900);
+
+    setTimeout(() => {
+      setIsPopping(false);
+      setPopperParticles([]);
+    }, 4500);
   };
 
   // Automatically trigger confetti when reaching the final page
@@ -485,6 +580,163 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               style={{ backgroundColor: p.color }}
             />
           ))}
+        </div>
+      )}
+
+      {/* Party Bomber Particle Overlay */}
+      {popperParticles.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+          {popperParticles.map(p => {
+            const renderShape = () => {
+              switch (p.type) {
+                case 'circle':
+                  return (
+                    <div 
+                      className="rounded-full shadow-sm" 
+                      style={{ width: p.size, height: p.size, backgroundColor: p.color }} 
+                    />
+                  );
+                case 'star':
+                  return (
+                    <span 
+                      style={{ fontSize: p.size, color: p.color }} 
+                      className="drop-shadow-sm font-sans block select-none"
+                    >
+                      ★
+                    </span>
+                  );
+                case 'emoji':
+                  return (
+                    <span 
+                      style={{ fontSize: p.size }} 
+                      className="drop-shadow-sm block select-none"
+                    >
+                      {p.emoji || '✨'}
+                    </span>
+                  );
+                case 'ribbon':
+                  return (
+                    <svg 
+                      width={p.size * 2} 
+                      height={p.size} 
+                      viewBox="0 0 40 20" 
+                      fill="none" 
+                      stroke={p.color} 
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="opacity-90"
+                    >
+                      <path d="M2,10 Q10,2 20,10 T38,10" />
+                    </svg>
+                  );
+                default: // rectangle
+                  return (
+                    <div 
+                      className="rounded-[1.5px] shadow-sm animate-pulse" 
+                      style={{ 
+                        width: p.size * 1.4, 
+                        height: p.size * 0.6, 
+                        backgroundColor: p.color 
+                      }} 
+                    />
+                  );
+              }
+            };
+
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ 
+                  left: `${p.startX}%`, 
+                  top: `${p.startY}%`, 
+                  scale: 0.1, 
+                  opacity: 0, 
+                  rotate: p.rotation 
+                }}
+                animate={{ 
+                  left: [
+                    `${p.startX}%`,
+                    `${p.midX}%`,
+                    `${p.targetX}%`
+                  ],
+                  top: [
+                    `${p.startY}%`,
+                    `${p.midY}%`,
+                    `${p.targetY}%`
+                  ],
+                  scale: [0.1, 1.4, 1.0, 0.4],
+                  opacity: [0, 1, 1, 0.8, 0],
+                  rotate: [
+                    p.rotation, 
+                    p.rotation + (180 * p.spinDirection), 
+                    p.rotation + (540 * p.spinDirection)
+                  ]
+                }}
+                transition={{ 
+                  duration: p.duration, 
+                  delay: p.delay, 
+                  ease: [0.1, 0.8, 0.25, 1.0]
+                }}
+                className="absolute flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
+              >
+                {renderShape()}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Party Bomber Cannon Launchers (Visual overlay) */}
+      {isPopping && (
+        <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none z-50 overflow-hidden">
+          {/* Left Cannon */}
+          <motion.div
+            initial={{ y: 90, x: -90, rotate: 45, opacity: 0 }}
+            animate={{ 
+              y: 0, 
+              x: 0, 
+              opacity: 1,
+              // Recoil shaking when firing
+              scale: [1, 0.75, 1.3, 0.9, 1],
+              rotate: [45, 25, 62, 40, 45],
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 180,
+              damping: 10,
+              scale: { duration: 0.6, ease: 'easeOut' },
+              rotate: { duration: 0.6, ease: 'easeOut' }
+            }}
+            key={`left-cannon-${lastShotTime}`}
+            className="absolute bottom-4 left-4 w-12 h-12 flex items-center justify-center text-3xl select-none"
+          >
+            🎉
+          </motion.div>
+
+          {/* Right Cannon */}
+          <motion.div
+            initial={{ y: 90, x: 90, rotate: -45, opacity: 0 }}
+            animate={{ 
+              y: 0, 
+              x: 0, 
+              opacity: 1,
+              // Recoil shaking when firing
+              scale: [1, 0.75, 1.3, 0.9, 1],
+              rotate: [-45, -25, -62, -40, -45],
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 180,
+              damping: 10,
+              scale: { duration: 0.6, ease: 'easeOut' },
+              rotate: { duration: 0.6, ease: 'easeOut' }
+            }}
+            key={`right-cannon-${lastShotTime}`}
+            className="absolute bottom-4 right-4 w-12 h-12 flex items-center justify-center text-3xl select-none"
+            style={{ transform: 'scaleX(-1)' }}
+          >
+            🎉
+          </motion.div>
         </div>
       )}
 

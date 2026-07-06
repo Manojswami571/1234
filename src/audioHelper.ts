@@ -202,3 +202,57 @@ export class CardMusicPlayer {
     return this.isPlaying;
   }
 }
+
+export function playPartyPopSound() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    // 1. Initial short "pop" high frequency pitch sweep
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.15);
+    
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+
+    // 2. Add high frequency burst (air release noise)
+    const bufferSize = ctx.sampleRate * 0.08; // 80ms noise
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.setValueAtTime(2800, ctx.currentTime);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.14, ctx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+
+    noise.start();
+    noise.stop(ctx.currentTime + 0.08);
+  } catch (e) {
+    console.warn("Failed to play party pop sound:", e);
+  }
+}
