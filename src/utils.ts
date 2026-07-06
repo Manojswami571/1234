@@ -913,3 +913,49 @@ function getFilterStyle(filter: string): string {
     default: return 'none';
   }
 }
+
+export function safeCopyTextToClipboard(text: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => resolve(true))
+        .catch((err) => {
+          console.warn("navigator.clipboard.writeText failed, using fallback:", err);
+          resolve(fallbackCopyTextToClipboard(text));
+        });
+    } else {
+      resolve(fallbackCopyTextToClipboard(text));
+    }
+  });
+}
+
+function fallbackCopyTextToClipboard(text: string): boolean {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  
+  textArea.style.position = "fixed";
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.width = "2em";
+  textArea.style.height = "2em";
+  textArea.style.padding = "0";
+  textArea.style.border = "none";
+  textArea.style.outline = "none";
+  textArea.style.boxShadow = "none";
+  textArea.style.background = "transparent";
+  textArea.style.opacity = "0";
+
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  let successful = false;
+  try {
+    successful = document.execCommand('copy');
+  } catch (err) {
+    console.error('Fallback copy text failed', err);
+  }
+
+  document.body.removeChild(textArea);
+  return successful;
+}

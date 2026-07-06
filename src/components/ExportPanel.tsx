@@ -6,7 +6,8 @@ import {
   saveCardToLocal, 
   listLocalCards, 
   deleteLocalCard, 
-  encodeCardToURL 
+  encodeCardToURL,
+  safeCopyTextToClipboard
 } from '../utils';
 import { 
   Download, FileJson, Link, Check, AlertCircle, Save, FolderOpen, Trash2, Upload, ExternalLink,
@@ -95,10 +96,13 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
       if (data && data.shortId) {
         const url = `${window.location.origin}${window.location.pathname}?c=${data.shortId}`;
         setShortURL(url);
-        // Copy to clipboard
-        navigator.clipboard.writeText(url);
-        setCopiedShort(true);
-        setTimeout(() => setCopiedShort(false), 2000);
+        // Copy to clipboard safely
+        safeCopyTextToClipboard(url).then(() => {
+          setCopiedShort(true);
+          setTimeout(() => setCopiedShort(false), 2000);
+        }).catch((e) => {
+          console.warn("Clipboard auto-copy failed, but link was generated:", e);
+        });
       } else {
         throw new Error('Invalid short link response.');
       }
@@ -302,9 +306,10 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
 
   // Copy encoded state url
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareableURL);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    safeCopyTextToClipboard(shareableURL).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    });
   };
 
   // Delete saved card
@@ -391,9 +396,10 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(shortURL);
-                  setCopiedShort(true);
-                  setTimeout(() => setCopiedShort(false), 2000);
+                  safeCopyTextToClipboard(shortURL).then(() => {
+                    setCopiedShort(true);
+                    setTimeout(() => setCopiedShort(false), 2000);
+                  });
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
                   copiedShort 
