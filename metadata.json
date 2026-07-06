@@ -1,0 +1,6 @@
+{
+  "name": "Dear You",
+  "description": "A premium interactive virtual greeting card maker. Customize cards with photos, colors, and interactive birthday cakes, then export as standalone interactive offline files.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
