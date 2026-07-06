@@ -47,6 +47,7 @@ export interface GreetingCardData {
   customTextColor: string;
   customFontHeading: string;
   customFontBody: string;
+  customBgImage: string | null;
 }
 
 export interface CardTheme {

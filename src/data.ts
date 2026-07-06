@@ -143,6 +143,19 @@ export const THEMES: CardTheme[] = [
     fontBody: '"Inter", sans-serif',
     description: 'A highly regal palette blending rich imperial velvet with luxurious golden ink.',
     previewColors: ['#F59E0B', '#3B0764', '#FDF4FF']
+  },
+  {
+    id: 'pretty-night',
+    name: 'Pretty Night 🖤',
+    accent: '#FBBF24', // Amber/Yellow Gold
+    bg: '#121212',     // Very dark grainy charcoal/black
+    cardBg: '#1A1A1A', // Card charcoal
+    textColor: '#FFFFFF', // High-contrast white ink
+    mutedTextColor: '#A3A3A3',
+    fontHeading: '"Space Grotesk", sans-serif',
+    fontBody: '"Caveat", cursive',
+    description: 'A moody, retro-inspired aesthetic celebrating pretty nights & black-and-white dreams.',
+    previewColors: ['#FBBF24', '#1A1A1A', '#FFFFFF']
   }
 ];
 
@@ -195,4 +208,5 @@ export const DEFAULT_CARD_DATA: GreetingCardData = {
   customTextColor: '#2B1B14',
   customFontHeading: '"Fredoka", sans-serif',
   customFontBody: '"Caveat", cursive',
+  customBgImage: null,
 };

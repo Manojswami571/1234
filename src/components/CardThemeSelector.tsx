@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { CardTheme, GreetingCardData } from '../types';
 import { THEMES } from '../data';
-import { Palette, Sliders, Type, Check, RefreshCw, Sparkles } from 'lucide-react';
+import { 
+  Palette, Sliders, Type, Check, RefreshCw, Sparkles, 
+  Upload, Trash2, Image as ImageIcon 
+} from 'lucide-react';
 
 interface CardThemeSelectorProps {
   cardData: GreetingCardData;
@@ -86,6 +89,63 @@ export default function CardThemeSelector({ cardData, onChange }: CardThemeSelec
             </button>
           );
         })}
+      </div>
+
+      {/* Custom Background Image Uploader */}
+      <div className="border-t border-neutral-200/80 pt-3 space-y-2">
+        <label className="block text-xs font-semibold text-neutral-600 flex items-center gap-1.5">
+          <ImageIcon className="w-3.5 h-3.5 text-neutral-500" />
+          Custom Card Background Image (e.g. Your Selfie!)
+        </label>
+        
+        {cardData.customBgImage ? (
+          <div className="relative rounded-xl border border-neutral-200 bg-neutral-50 p-2.5 flex items-center justify-between gap-3 animate-in fade-in duration-150">
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <img
+                src={cardData.customBgImage}
+                alt="Background preview"
+                className="w-12 h-12 rounded-lg object-cover border border-neutral-200"
+              />
+              <div className="overflow-hidden">
+                <p className="text-[11px] font-bold text-neutral-700 truncate">Background Image Active</p>
+                <p className="text-[9px] text-green-600 font-semibold flex items-center gap-0.5 mt-0.5">
+                  <Check className="w-2.5 h-2.5" /> Applied to all pages
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onChange({ customBgImage: null })}
+              className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+              title="Remove background image"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative border border-dashed border-neutral-300 hover:border-neutral-400 rounded-xl bg-white hover:bg-neutral-50/50 p-3 flex flex-col items-center justify-center transition-all cursor-pointer">
+            <Upload className="w-5 h-5 text-neutral-400 mb-1" />
+            <span className="text-[10px] font-bold text-neutral-700">Click to upload your custom background image</span>
+            <span className="text-[8px] text-neutral-400 mt-0.5">Drag & drop or tap to select image</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    onChange({ customBgImage: event.target?.result as string });
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+          </div>
+        )}
+        <p className="text-[9px] text-neutral-400 leading-tight">
+          💡 <strong>Tip:</strong> Set the theme to <strong>Pretty Night 🖤</strong> above when using dark or black-and-white background photos to match the vibe perfectly!
+        </p>
       </div>
 
       {/* Advanced Customization Toggle */}

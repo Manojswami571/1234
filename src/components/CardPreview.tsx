@@ -380,7 +380,11 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
       className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden"
       style={{ 
         backgroundColor: bg,
-        backgroundImage: `radial-gradient(circle at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)`
+        backgroundImage: cardData.customBgImage 
+          ? `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65)), url(${cardData.customBgImage})`
+          : `radial-gradient(circle at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
       }}
     >
       {/* Floating Background Decorations */}
