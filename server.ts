@@ -8,7 +8,16 @@ async function startServer() {
   const PORT = 3000;
 
   // Set payload limits high to support embedded photos, signatures, etc.
-  app.use(express.json({ limit: '15mb' }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // Custom error handler for JSON parsing errors
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err && err.type === 'entity.too.large') {
+      return res.status(413).json({ error: 'The card content is too large to shorten (limit is 50MB). Try using a smaller photo or fewer drawings.' });
+    }
+    next(err);
+  });
 
   const dbPath = path.join(process.cwd(), 'short_cards.json');
   let cardsDb: Record<string, any> = {};

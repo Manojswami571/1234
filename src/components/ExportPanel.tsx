@@ -89,7 +89,14 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
       });
 
       if (!response.ok) {
-        throw new Error('Failed to shorten link on the server.');
+        let errMsg = 'Failed to shorten link on the server.';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errMsg = errData.error;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
