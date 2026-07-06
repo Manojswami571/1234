@@ -10,7 +10,7 @@ import {
 } from '../utils';
 import { 
   Download, FileJson, Link, Check, AlertCircle, Save, FolderOpen, Trash2, Upload, ExternalLink,
-  QrCode, Printer
+  QrCode, Printer, Zap, Sparkles
 } from 'lucide-react';
 
 interface ExportPanelProps {
@@ -26,19 +26,28 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [qrCodeError, setQrCodeError] = useState<string | null>(null);
 
+  // Short link states
+  const [shortURL, setShortURL] = useState('');
+  const [isGeneratingShort, setIsGeneratingShort] = useState(false);
+  const [shortError, setShortError] = useState<string | null>(null);
+  const [copiedShort, setCopiedShort] = useState(false);
+
   // Update shareable link on data shifts
   useEffect(() => {
     const encoded = encodeCardToURL(cardData);
     const url = `${window.location.origin}${window.location.pathname}#card=${encoded}`;
     setShareableURL(url);
     setSavedLocally(false);
+    // Reset short link when card configuration edits happen so they can refresh it
+    setShortURL('');
   }, [cardData]);
 
-  // Generate QR Code dynamically when shareableURL changes
+  // Generate QR Code dynamically when shareableURL or shortURL changes
   useEffect(() => {
-    if (shareableURL) {
+    const urlToEncode = shortURL || shareableURL;
+    if (urlToEncode) {
       setQrCodeError(null);
-      QRCode.toDataURL(shareableURL, {
+      QRCode.toDataURL(urlToEncode, {
         width: 300,
         margin: 2,
         errorCorrectionLevel: 'L',
@@ -56,7 +65,42 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
           setQrCodeUrl('');
         });
     }
-  }, [shareableURL]);
+  }, [shareableURL, shortURL]);
+
+  const handleGenerateShortLink = async () => {
+    setIsGeneratingShort(true);
+    setShortError(null);
+    try {
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cardData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to shorten link on the server.');
+      }
+
+      const data = await response.json();
+      if (data && data.shortId) {
+        const url = `${window.location.origin}${window.location.pathname}?c=${data.shortId}`;
+        setShortURL(url);
+        // Copy to clipboard
+        navigator.clipboard.writeText(url);
+        setCopiedShort(true);
+        setTimeout(() => setCopiedShort(false), 2000);
+      } else {
+        throw new Error('Invalid short link response.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setShortError(err.message || 'Failed to connect to the shortening service.');
+    } finally {
+      setIsGeneratingShort(false);
+    }
+  };
 
   const handlePrintQRCode = () => {
     const iframe = document.createElement('iframe');
@@ -307,38 +351,108 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
           <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 flex-shrink-0">
             <Link className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-xs font-bold text-neutral-800">Quick Shareable Link</h3>
+          <div className="flex-1">
+            <h3 className="text-xs font-bold text-neutral-800">Share Your Greeting Card</h3>
             <p className="text-[10px] text-neutral-400 mt-0.5 leading-normal">
-              Encodes your card colors, texts, and settings directly in the URL hash fragment. Large custom images might be excluded to keep the URL concise.
+              Get a clean, short link to send via text or message. Safe for all heavy photos and signatures!
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            readOnly
-            value={shareableURL}
-            className="flex-1 text-[10px] bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 focus:outline-none font-mono text-neutral-500 truncate"
-          />
-          <button
-            onClick={handleCopyLink}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
-              copiedLink 
-                ? 'bg-green-600 text-white' 
-                : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
-            }`}
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5" /> : null}
-            {copiedLink ? 'Copied' : 'Copy'}
-          </button>
+        {/* Short Link Generator Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-purple-800 flex items-center gap-1">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              Short Link (Highly Recommended)
+            </span>
+            {shortURL && (
+              <span className="text-[9px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                Active Link Created
+              </span>
+            )}
+          </div>
+
+          {shortURL ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                readOnly
+                value={shortURL}
+                className="flex-1 text-[11px] bg-white border border-purple-200 rounded-lg px-2.5 py-1.5 focus:outline-none font-mono text-purple-700 font-semibold"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shortURL);
+                  setCopiedShort(true);
+                  setTimeout(() => setCopiedShort(false), 2000);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer ${
+                  copiedShort 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm'
+                }`}
+              >
+                {copiedShort ? <Check className="w-3.5 h-3.5" /> : null}
+                {copiedShort ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleGenerateShortLink}
+              disabled={isGeneratingShort}
+              className="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: isGeneratingShort ? '2s' : '0s' }} />
+              {isGeneratingShort ? 'Generating Short Link...' : 'Create Short Link ⚡'}
+            </button>
+          )}
+
+          {shortError && (
+            <p className="text-[9px] text-red-600 font-semibold flex items-center gap-1 mt-1">
+              <AlertCircle className="w-3 h-3 flex-shrink-0" />
+              {shortError}
+            </p>
+          )}
+
+          <p className="text-[9px] text-neutral-400 leading-normal">
+            {shortURL 
+              ? "This short link will keep your high-res photos and signatures fully safe and clean!"
+              : "Click above to save this card to our database and produce a clean, micro-sized short link."}
+          </p>
         </div>
 
-        <div className="flex gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200/60 text-[10px] text-amber-800 font-medium">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>Note: For cards with heavy photos, download the Standalone HTML file above to ensure images never break.</span>
-        </div>
+        {/* Collapsible Hash/Encoded Long Link */}
+        <details className="group border-t border-neutral-100 pt-3">
+          <summary className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 cursor-pointer list-none flex items-center gap-1 select-none">
+            <span className="transition-transform group-open:rotate-90">▶</span>
+            Show decentralized full-length link (Very Long)
+          </summary>
+          <div className="space-y-2 mt-2.5 pl-3">
+            <p className="text-[9px] text-neutral-400 leading-normal">
+              This link encodes your card data completely inside the link hash segment. It does not store anything on our server, but can become extremely long.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                readOnly
+                value={shareableURL}
+                className="flex-1 text-[10px] bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 focus:outline-none font-mono text-neutral-500 truncate"
+              />
+              <button
+                onClick={handleCopyLink}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
+                  copiedLink 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
+                }`}
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5" /> : null}
+                {copiedLink ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </details>
       </div>
 
       {/* Offline Sharing & QR Code Section */}

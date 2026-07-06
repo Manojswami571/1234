@@ -232,22 +232,25 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
 
   const pageVariants = {
     enter: (dir: number) => ({
-      rotateY: dir > 0 ? 90 : -90,
+      rotateY: dir > 0 ? 65 : -65,
+      x: dir > 0 ? 40 : -40,
       opacity: 0,
-      scale: 0.95,
-      transformOrigin: "left center",
+      scale: 0.96,
+      transformOrigin: dir > 0 ? "left center" : "right center",
     }),
-    center: {
+    center: (dir: number) => ({
       rotateY: 0,
+      x: 0,
       opacity: 1,
       scale: 1,
-      transformOrigin: "left center",
-    },
+      transformOrigin: dir > 0 ? "left center" : "right center",
+    }),
     exit: (dir: number) => ({
-      rotateY: dir > 0 ? -90 : 90,
+      rotateY: dir > 0 ? -65 : 65,
+      x: dir > 0 ? -40 : 40,
       opacity: 0,
-      scale: 0.95,
-      transformOrigin: "left center",
+      scale: 0.96,
+      transformOrigin: dir > 0 ? "left center" : "right center",
     }),
   };
 
@@ -497,7 +500,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center text-white"
             >
               {/* Envelope interactive animation */}
@@ -546,7 +549,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center text-white w-full max-w-[240px]"
             >
               <h3 className="text-base font-bold mb-1" style={{ fontFamily: headingFont }}>
@@ -598,7 +601,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
               <h2 className="text-lg font-bold text-white mb-4 drop-shadow-sm leading-snug" style={{ fontFamily: headingFont }}>
@@ -646,7 +649,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
               <h2 className="text-lg font-bold text-white mb-2 leading-tight drop-shadow-sm" style={{ fontFamily: headingFont }}>
@@ -713,7 +716,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
               <h2 className="text-lg font-bold text-white mb-2 leading-tight drop-shadow-sm" style={{ fontFamily: headingFont }}>
@@ -797,7 +800,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
               <h2 className="text-xl font-extrabold text-white leading-tight drop-shadow-sm mb-6 max-w-xs min-h-[50px] flex items-center justify-center" style={{ fontFamily: headingFont }}>
@@ -830,7 +833,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center w-full"
             >
               {/* Parchment/Notebook paper texture representation */}
@@ -876,7 +879,7 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
               animate="center"
               exit="exit"
               transition={pageTransition}
-              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
+              style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d', transformOrigin: direction > 0 ? "left center" : "right center" }}
               className="flex flex-col items-center justify-center text-center w-full"
             >
               <h2 className="text-xl font-bold text-white mb-2 drop-shadow-sm capitalize min-h-[28px] flex items-center justify-center" style={{ fontFamily: headingFont }}>
@@ -932,6 +935,20 @@ export default function CardPreview({ cardData, activePage, setActivePage, gated
           )}
         </AnimatePresence>
       </div>
+
+      {/* Floating Celebrate Button */}
+      {isUnlocked && activePage >= 2 && (
+        <motion.button
+          whileHover={{ scale: 1.08, rotate: 1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={triggerConfetti}
+          className="absolute bottom-16 right-5 z-30 flex items-center gap-1 py-1 px-2.5 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white rounded-full text-[10px] font-extrabold shadow-lg border border-white/20 transition-all cursor-pointer"
+          style={{ fontFamily: headingFont }}
+        >
+          <Sparkles className="w-3 h-3 text-white/90 animate-pulse" />
+          <span>Celebrate 🎉</span>
+        </motion.button>
+      )}
 
       {/* Navigation Pills bar */}
       <div className="absolute bottom-4 left-3 right-3 z-30 flex justify-between items-center px-2">

@@ -78,6 +78,71 @@ export const THEMES: CardTheme[] = [
     fontBody: '"Inter", sans-serif',
     description: 'Soothing marine elements with deep navy typography.',
     previewColors: ['#4A5FB3', '#F3F6FA', '#111E3D']
+  },
+  {
+    id: 'cosmic-slate',
+    name: 'Cosmic Slate',
+    accent: '#38BDF8', // Sky Blue
+    bg: '#0F172A',     // Slate 900
+    cardBg: '#1E293B', // Slate 800
+    textColor: '#F8FAFC', // Slate 50
+    mutedTextColor: '#94A3B8', // Slate 400
+    fontHeading: '"Space Grotesk", sans-serif',
+    fontBody: '"Inter", sans-serif',
+    description: 'Futuristic glowing space theme with starry blue accents & deep slate canvas.',
+    previewColors: ['#38BDF8', '#1E293B', '#F8FAFC']
+  },
+  {
+    id: 'sakura-blossom',
+    name: 'Sakura Blossom',
+    accent: '#DB2777', // Rose Pink
+    bg: '#FFF1F2',     // Rose 50
+    cardBg: '#FFFFFF', // Pure White
+    textColor: '#4C0519', // Dark burgundy
+    mutedTextColor: '#9F1239',
+    fontHeading: '"Playfair Display", serif',
+    fontBody: '"Caveat", cursive',
+    description: 'Romantic cherry blossom aesthetic with timeless calligraphic elegance.',
+    previewColors: ['#DB2777', '#FFFFFF', '#4C0519']
+  },
+  {
+    id: 'retro-terminal',
+    name: 'Hacker Terminal',
+    accent: '#22C55E', // Green 500
+    bg: '#050B06',     // Dark green black
+    cardBg: '#0C1A0D', // Slightly lighter dark green
+    textColor: '#4ADE80', // Light Green text
+    mutedTextColor: '#15803D',
+    fontHeading: '"Space Grotesk", sans-serif',
+    fontBody: '"JetBrains Mono", monospace',
+    description: 'A charming retro computing aesthetic with neon green cyber styling.',
+    previewColors: ['#22C55E', '#0C1A0D', '#4ADE80']
+  },
+  {
+    id: 'cozy-autumn',
+    name: 'Cozy Autumn',
+    accent: '#EA580C', // Rust Orange
+    bg: '#FEF3C7',     // Amber 100
+    cardBg: '#FFFBEB', // Amber 50
+    textColor: '#451A03', // Deep brown
+    mutedTextColor: '#78350F',
+    fontHeading: '"Fredoka", sans-serif',
+    fontBody: '"Caveat", cursive',
+    description: 'Spiced pumpkin lattes, rustic crisp leaves, and warm golden hues.',
+    previewColors: ['#EA580C', '#FFFBEB', '#451A03']
+  },
+  {
+    id: 'royal-velvet',
+    name: 'Royal Velvet',
+    accent: '#F59E0B', // Amber Gold
+    bg: '#2E1065',     // Violet 950
+    cardBg: '#3B0764', // Violet 900
+    textColor: '#FDF4FF', // Violet 50
+    mutedTextColor: '#D8B4FE',
+    fontHeading: '"Playfair Display", serif',
+    fontBody: '"Inter", sans-serif',
+    description: 'A highly regal palette blending rich imperial velvet with luxurious golden ink.',
+    previewColors: ['#F59E0B', '#3B0764', '#FDF4FF']
   }
 ];
 

@@ -21,6 +21,41 @@ export default function App() {
   const [isRecipientView, setIsRecipientView] = useState<boolean>(false);
 
   useEffect(() => {
+    const handleUrlLoading = async () => {
+      // 1. Check for query parameter short link ID (e.g. ?c=abc or ?cardId=abc)
+      const params = new URLSearchParams(window.location.search);
+      const shortId = params.get('c') || params.get('cardId');
+      
+      if (shortId) {
+        try {
+          const response = await fetch(`/api/card/${shortId}`);
+          if (response.ok) {
+            const cardJson = await response.json();
+            setCardData(cardJson);
+            setIsRecipientView(true);
+            setIsPresentModeOpen(true);
+            return; // Loaded successfully!
+          }
+        } catch (e) {
+          console.error('Failed to load card from server database:', e);
+        }
+      }
+
+      // 2. Fallback to hash-based loading
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#card=')) {
+        const b64Data = hash.replace('#card=', '');
+        const decoded = decodeCardFromURL(b64Data);
+        if (decoded) {
+          setCardData(decoded);
+          setIsRecipientView(true);
+          setIsPresentModeOpen(true);
+        }
+      }
+    };
+
+    handleUrlLoading();
+
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#card=')) {
@@ -34,7 +69,6 @@ export default function App() {
       }
     };
 
-    handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);

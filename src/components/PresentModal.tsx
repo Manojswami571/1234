@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import CardPreview from './CardPreview';
 import { GreetingCardData } from '../types';
 import { X } from 'lucide-react';
@@ -10,6 +10,15 @@ interface PresentModalProps {
 }
 
 export default function PresentModal({ isOpen, onClose, cardData }: PresentModalProps) {
+  const [activePage, setActivePage] = useState<number>(0);
+
+  // Reset active page to 0 (Envelope Cover) every time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActivePage(0);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -34,8 +43,8 @@ export default function PresentModal({ isOpen, onClose, cardData }: PresentModal
           <div className="w-full h-full rounded-[38px] overflow-hidden relative">
             <CardPreview 
               cardData={cardData} 
-              activePage={0} 
-              setActivePage={() => {}} 
+              activePage={activePage} 
+              setActivePage={setActivePage} 
               gatedMode={true} 
             />
           </div>
