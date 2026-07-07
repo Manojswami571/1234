@@ -3,6 +3,7 @@ import { GreetingCardData } from '../types';
 import CardThemeSelector from './CardThemeSelector';
 import SignatureCanvas from './SignatureCanvas';
 import MusicSelector from './MusicSelector';
+import { compressImageFile } from '../utils';
 import { 
   Lock, Heart, Image as ImageIcon, Sparkles, Send, Music,
   ChevronDown, ChevronUp, User, Users, Compass, Sliders, Type, HelpCircle, FileText
@@ -19,18 +20,31 @@ export default function CardEditor({ cardData, onChange, activePreviewPage, setA
   const [openStep, setOpenStep] = useState<number>(0);
 
   const handleFileChange = (key: string, file: File, index?: number) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      if (typeof index === 'number') {
-        const nextPhotos = [...cardData.memoryPhotos];
-        nextPhotos[index] = base64;
-        onChange({ memoryPhotos: nextPhotos });
-      } else {
-        onChange({ [key]: base64 });
-      }
-    };
-    reader.readAsDataURL(file);
+    compressImageFile(file)
+      .then((compressedBase64) => {
+        if (typeof index === 'number') {
+          const nextPhotos = [...cardData.memoryPhotos];
+          nextPhotos[index] = compressedBase64;
+          onChange({ memoryPhotos: nextPhotos });
+        } else {
+          onChange({ [key]: compressedBase64 });
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to compress image, falling back to original size:", err);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64 = e.target?.result as string;
+          if (typeof index === 'number') {
+            const nextPhotos = [...cardData.memoryPhotos];
+            nextPhotos[index] = base64;
+            onChange({ memoryPhotos: nextPhotos });
+          } else {
+            onChange({ [key]: base64 });
+          }
+        };
+        reader.readAsDataURL(file);
+      });
   };
 
   const removePhoto = (key: string, index?: number) => {
