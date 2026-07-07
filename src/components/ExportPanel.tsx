@@ -80,28 +80,54 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
     setIsGeneratingShort(true);
     setShortError(null);
     try {
-      const response = await fetch('/api/shorten', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cardData),
-      });
+      let shortId = '';
+      
+      try {
+        const response = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cardData),
+        });
 
-      if (!response.ok) {
-        let errMsg = 'Failed to shorten link on the server.';
-        try {
-          const errData = await response.json();
-          if (errData && errData.error) {
-            errMsg = errData.error;
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.shortId) {
+            shortId = data.shortId;
           }
-        } catch (_) {}
-        throw new Error(errMsg);
+        } else {
+          console.warn('Backend shortening failed, attempting client-side decentralized database fallback...');
+        }
+      } catch (backendErr) {
+        console.warn('Backend shortening service unreachable, attempting client-side decentralized database fallback:', backendErr);
       }
 
-      const data = await response.json();
-      if (data && data.shortId) {
-        const url = `${window.location.origin}${window.location.pathname}?c=${data.shortId}`;
+      // Fallback to npoint if server shortening failed or wasn't available
+      if (!shortId) {
+        try {
+          const fallbackRes = await fetch('https://api.npoint.io/documents', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ contents: cardData }),
+          });
+
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            if (data && data.id) {
+              shortId = data.id;
+            }
+          }
+        } catch (fallbackErr: any) {
+          console.error('NPoint fallback also failed:', fallbackErr);
+          throw new Error('Failed to shorten link on both server and client-side database. Try downloading the HTML file instead or use the Decentralized long link.');
+        }
+      }
+
+      if (shortId) {
+        const url = `${window.location.origin}${window.location.pathname}?c=${shortId}`;
         setShortURL(url);
         // Copy to clipboard safely
         safeCopyTextToClipboard(url).then(() => {
@@ -111,7 +137,7 @@ export default function ExportPanel({ cardData, onLoadCard }: ExportPanelProps) 
           console.warn("Clipboard auto-copy failed, but link was generated:", e);
         });
       } else {
-        throw new Error('Invalid short link response.');
+        throw new Error('Could not generate short link.');
       }
     } catch (err: any) {
       console.error(err);

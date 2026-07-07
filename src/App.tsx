@@ -27,17 +27,38 @@ export default function App() {
       const shortId = params.get('c') || params.get('cardId');
       
       if (shortId) {
+        let loaded = false;
         try {
           const response = await fetch(`/api/card/${shortId}`);
           if (response.ok) {
             const cardJson = await response.json();
-            setCardData(cardJson);
-            setIsRecipientView(true);
-            setIsPresentModeOpen(true);
-            return; // Loaded successfully!
+            if (cardJson && cardJson.id) {
+              setCardData(cardJson);
+              setIsRecipientView(true);
+              setIsPresentModeOpen(true);
+              loaded = true;
+            }
           }
         } catch (e) {
           console.error('Failed to load card from server database:', e);
+        }
+
+        // Fallback to client-side npoint.io fetch if backend fetch failed or returned invalid data
+        if (!loaded) {
+          try {
+            const response = await fetch(`https://api.npoint.io/documents/${shortId}`);
+            if (response.ok) {
+              const resJson = await response.json();
+              const cardJson = resJson.contents || resJson;
+              if (cardJson && cardJson.id) {
+                setCardData(cardJson);
+                setIsRecipientView(true);
+                setIsPresentModeOpen(true);
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load card from fallback database:', e);
+          }
         }
       }
 
